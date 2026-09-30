@@ -1,471 +1,1595 @@
 <!DOCTYPE html>
 <html lang="pt-BR" data-theme="dark">
+
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>NextRoute</title>
-<link rel="preconnect" href="https://fonts.googleapis.com"/>
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css"/>
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<style>
-/* ── TEMAS ──────────────────────────────────────────────────────────────────── */
-[data-theme="dark"]{
-  --bg:#0e0e0c;--bg2:#161614;--bg3:#1e1e1b;--bg4:#252521;
-  --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.13);
-  --text:#f0ede6;--muted:#7a7870;--muted2:#5a5854;
-  --shadow:rgba(0,0,0,.4);
-  --teal:#00c896;--teal-dim:rgba(0,200,150,0.12);--teal-deep:#007a5a;
-  --amber:#e8a030;--amber-dim:rgba(232,160,48,0.12);
-  --red:#e05454;--red-dim:rgba(224,84,84,0.12);
-  --green:#5ac87a;--green-dim:rgba(90,200,122,0.12);
-  --blue:#4fc3f7;--blue-dim:rgba(79,195,247,0.12);
-  --map-tile:dark;
-}
-[data-theme="light"]{
-  --bg:#f4f3ee;--bg2:#ffffff;--bg3:#eceae2;--bg4:#e0ddd5;
-  --border:rgba(0,0,0,0.08);--border2:rgba(0,0,0,0.15);
-  --text:#1a1918;--muted:#6b6963;--muted2:#9b9890;
-  --shadow:rgba(0,0,0,.12);
-  --teal:#0a8a65;--teal-dim:rgba(10,138,101,0.10);--teal-deep:#065a42;
-  --amber:#b06010;--amber-dim:rgba(176,96,16,0.10);
-  --red:#c03030;--red-dim:rgba(192,48,48,0.08);
-  --green:#2e7a38;--green-dim:rgba(46,122,56,0.10);
-  --blue:#1565a0;--blue-dim:rgba(21,101,160,0.10);
-  --map-tile:light;
-}
-/* ── BASE ─────────────────────────────────────────────────────────────────── */
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html{transition:background .25s,color .25s}
-body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:0 0 6rem;-webkit-font-smoothing:antialiased;transition:background .25s,color .25s}
-a{color:inherit;text-decoration:none}
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>NextRoute</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <style>
+    /* ── TEMAS ──────────────────────────────────────────────────────────────────── */
+    [data-theme="dark"] {
+      --bg: #0e0e0c;
+      --bg2: #161614;
+      --bg3: #1e1e1b;
+      --bg4: #252521;
+      --border: rgba(255, 255, 255, 0.07);
+      --border2: rgba(255, 255, 255, 0.13);
+      --text: #f0ede6;
+      --muted: #7a7870;
+      --muted2: #5a5854;
+      --shadow: rgba(0, 0, 0, .4);
+      --teal: #00c896;
+      --teal-dim: rgba(0, 200, 150, 0.12);
+      --teal-deep: #007a5a;
+      --amber: #e8a030;
+      --amber-dim: rgba(232, 160, 48, 0.12);
+      --red: #e05454;
+      --red-dim: rgba(224, 84, 84, 0.12);
+      --green: #5ac87a;
+      --green-dim: rgba(90, 200, 122, 0.12);
+      --blue: #4fc3f7;
+      --blue-dim: rgba(79, 195, 247, 0.12);
+      --map-tile: dark;
+    }
 
-/* ── HEADER ───────────────────────────────────────────────────────────────── */
-.header{padding:2.5rem 1.5rem 0;max-width:760px;margin:0 auto 2rem;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
-.brand{display:flex;align-items:center;gap:14px}
-.brand-icon{width:44px;height:44px;border-radius:12px;background:var(--teal-dim);border:1px solid rgba(0,200,150,.25);display:flex;align-items:center;justify-content:center;flex-shrink:0}
-[data-theme="light"] .brand-icon{border-color:rgba(10,138,101,.3)}
-.brand-icon i{font-size:22px;color:var(--teal)}
-.brand-title{font-size:26px;font-weight:700;letter-spacing:-.04em;color:var(--text)}
-.brand-title .route{font-weight:300;color:var(--teal);letter-spacing:-.02em;position:relative;display:inline-block}
-.brand-title .route::after{content:'';position:absolute;left:0;bottom:0;width:100%;height:1.5px;background:var(--teal);opacity:.35;border-radius:2px}
-.brand-sub{font-size:11px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin-top:2px}
-.header-right{display:flex;align-items:center;gap:8px}
-.theme-btn{width:36px;height:36px;border-radius:10px;border:1px solid var(--border2);background:var(--bg2);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--muted);transition:all .2s;flex-shrink:0}
-.theme-btn:hover{color:var(--text);border-color:var(--teal);background:var(--teal-dim)}
-.theme-btn i{font-size:18px}
-.hbadge{font-size:11px;padding:4px 10px;border-radius:100px;display:flex;align-items:center;gap:5px;white-space:nowrap}
-.hbadge-teal{color:var(--teal);background:var(--teal-dim);border:1px solid rgba(0,200,150,.2)}
-.hbadge-blue{color:var(--blue);background:var(--blue-dim);border:1px solid rgba(79,195,247,.2)}
-[data-theme="light"] .hbadge-blue{border-color:rgba(21,101,160,.2)}
-.pulse{width:6px;height:6px;border-radius:50%;background:var(--teal);animation:pulse 2s ease infinite}
-@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.7)}}
+    [data-theme="light"] {
+      --bg: #f4f3ee;
+      --bg2: #ffffff;
+      --bg3: #eceae2;
+      --bg4: #e0ddd5;
+      --border: rgba(0, 0, 0, 0.08);
+      --border2: rgba(0, 0, 0, 0.15);
+      --text: #1a1918;
+      --muted: #6b6963;
+      --muted2: #9b9890;
+      --shadow: rgba(0, 0, 0, .12);
+      --teal: #0a8a65;
+      --teal-dim: rgba(10, 138, 101, 0.10);
+      --teal-deep: #065a42;
+      --amber: #b06010;
+      --amber-dim: rgba(176, 96, 16, 0.10);
+      --red: #c03030;
+      --red-dim: rgba(192, 48, 48, 0.08);
+      --green: #2e7a38;
+      --green-dim: rgba(46, 122, 56, 0.10);
+      --blue: #1565a0;
+      --blue-dim: rgba(21, 101, 160, 0.10);
+      --map-tile: light;
+    }
 
-/* ── MAIN ─────────────────────────────────────────────────────────────────── */
-.main{max-width:760px;margin:0 auto;padding:0 1.5rem}
+    /* ── BASE ─────────────────────────────────────────────────────────────────── */
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0
+    }
 
-/* ── PREÇOS ───────────────────────────────────────────────────────────────── */
-.precos-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:1rem}
-.preco-card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:10px 12px}
-.preco-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;display:flex;align-items:center;gap:4px;margin-bottom:4px}
-.preco-label i{font-size:12px}
-.preco-val{font-size:17px;font-weight:700;color:var(--text)}
-.preco-unit{font-size:10px;font-weight:400;color:var(--muted)}
-.preco-fonte{font-size:10px;color:var(--muted2);display:flex;align-items:center;gap:3px;margin-top:3px}
-.fonte-anp{color:var(--teal)}.fonte-est{color:var(--amber)}
+    html {
+      transition: background .25s, color .25s
+    }
 
-/* ── FORM ─────────────────────────────────────────────────────────────────── */
-.form-card{background:var(--bg2);border:1px solid var(--border);border-radius:22px;padding:1.75rem;margin-bottom:1rem}
-.route-inputs{margin-bottom:1.5rem}
-.input-row{display:flex;align-items:center;gap:12px}
-.node{display:flex;flex-direction:column;align-items:center;flex-shrink:0}
-.node-dot{width:12px;height:12px;border-radius:50%;border:2px solid var(--muted2);flex-shrink:0}
-.node-dot.origin{border-color:var(--teal)}
-.node-dot.dest{border-color:var(--teal);background:var(--teal)}
-.node-line{width:1.5px;height:22px;background:linear-gradient(to bottom,var(--teal),var(--muted2));margin:3px 0}
-.route-input{flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:11px 16px;font-size:14px;font-family:inherit;color:var(--text);outline:none;transition:border-color .2s,background .2s}
-.route-input::placeholder{color:var(--muted2)}
-.route-input:focus{border-color:var(--teal);background:var(--bg4)}
-.divider-row{display:flex;align-items:center;gap:10px;margin:1.25rem 0}
-.divider-line{flex:1;height:1px;background:var(--border)}
-.divider-label{font-size:11px;color:var(--muted2);letter-spacing:.06em;text-transform:uppercase;white-space:nowrap}
-.opts{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:1.5rem}
-.opt{display:flex;flex-direction:column;gap:6px}
-.opt-label{font-size:11px;color:var(--muted);letter-spacing:.05em;text-transform:uppercase;display:flex;align-items:center;gap:4px}
-.opt-label i{font-size:13px;color:var(--muted2)}
-.opt select,.opt input[type="time"]{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:9px 12px;font-size:13px;font-family:inherit;color:var(--text);outline:none;cursor:pointer;appearance:none;-webkit-appearance:none;transition:border-color .2s}
-.opt select:focus,.opt input[type="time"]:focus{border-color:var(--teal)}
-.opt select option{background:var(--bg2)}
-.btn-analyze{width:100%;padding:14px;font-size:14px;font-weight:600;font-family:inherit;border-radius:10px;cursor:pointer;background:var(--teal);color:#021a12;border:none;display:flex;align-items:center;justify-content:center;gap:8px;transition:opacity .15s,transform .1s}
-.btn-analyze:hover{opacity:.9}.btn-analyze:active{transform:scale(.99)}
-.btn-analyze:disabled{opacity:.4;cursor:not-allowed}
-.btn-analyze i{font-size:18px}
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 0 0 6rem;
+      -webkit-font-smoothing: antialiased;
+      transition: background .25s, color .25s
+    }
 
-/* ── ALERTAS ──────────────────────────────────────────────────────────────── */
-.alertas{display:flex;flex-direction:column;gap:8px;margin-bottom:1rem}
-.alerta{display:flex;align-items:flex-start;gap:10px;padding:12px 14px;border-radius:10px;font-size:13px;line-height:1.5;border:1px solid transparent}
-.alerta i{font-size:18px;flex-shrink:0;margin-top:1px}
-.alerta-pico{background:var(--amber-dim);border-color:rgba(232,160,48,.25);color:var(--amber)}
-.alerta-chuva{background:var(--blue-dim);border-color:rgba(79,195,247,.2);color:var(--blue)}
-.alerta-perigo{background:var(--red-dim);border-color:rgba(224,84,84,.2);color:var(--red)}
-.alerta b{display:block;margin-bottom:2px}
-.sugestoes-horario{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;align-items:center}
-.sug-btn{font-size:12px;padding:4px 10px;border-radius:100px;background:rgba(232,160,48,.15);border:1px solid rgba(232,160,48,.35);color:var(--amber);cursor:pointer;font-family:inherit;transition:background .15s}
-.sug-btn:hover{background:rgba(232,160,48,.28)}
+    a {
+      color: inherit;
+      text-decoration: none
+    }
 
-/* ── CLIMA ────────────────────────────────────────────────────────────────── */
-.clima-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:1rem}
-.clima-card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:10px}
-.clima-card.ok i.clima-icon{color:var(--teal)}
-.clima-card.atencao i.clima-icon{color:var(--amber)}
-.clima-card.perigo i.clima-icon{color:var(--red)}
-i.clima-icon{font-size:24px;flex-shrink:0}
-.clima-local{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:2px}
-.clima-desc{font-size:13px;font-weight:600;color:var(--text);text-transform:capitalize}
-.clima-temp{font-size:12px;color:var(--muted)}
+    /* ── HEADER ───────────────────────────────────────────────────────────────── */
+    .header {
+      padding: 2.5rem 1.5rem 0;
+      max-width: 760px;
+      margin: 0 auto 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap
+    }
 
-/* ── RESULTS ──────────────────────────────────────────────────────────────── */
-.results-wrap{animation:fadeUp .4s ease}
-@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
-.context-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:8px}
-.context-route{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
-.context-route b{color:var(--text);font-weight:600}
-.context-route i{font-size:15px}
-.summary-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:1rem}
-.summary-card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:12px 14px}
-.summary-label{font-size:10px;color:var(--muted);letter-spacing:.07em;text-transform:uppercase;margin-bottom:5px}
-.summary-val{font-size:20px;font-weight:700;color:var(--text);line-height:1}
-.summary-val.sm{font-size:13px;font-weight:500;line-height:1.3;margin-top:2px}
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 14px
+    }
 
-/* ── EXPORT ───────────────────────────────────────────────────────────────── */
-.export-row{display:flex;gap:8px;margin-bottom:1rem;flex-wrap:wrap}
-.export-btn{display:flex;align-items:center;gap:7px;padding:9px 16px;border-radius:10px;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;border:1px solid transparent;transition:opacity .15s,transform .1s}
-.export-btn:hover{opacity:.85}.export-btn:active{transform:scale(.98)}
-.btn-gmaps{background:#1a73e8;color:#fff}
-.btn-waze{background:#33ccff;color:#0a2a40}
+    .brand-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: var(--teal-dim);
+      border: 1px solid rgba(0, 200, 150, .25);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0
+    }
 
-/* ── MAPA ─────────────────────────────────────────────────────────────────── */
-.map-section{margin-bottom:1rem}
-.section-label{font-size:11px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;display:flex;align-items:center;gap:6px}
-.map-container{border-radius:16px;overflow:hidden;border:1px solid var(--border);height:320px;position:relative}
-#routeMap{height:100%;width:100%}
-.map-legend{display:flex;gap:12px;margin-top:8px;flex-wrap:wrap}
-.legend-item{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--muted)}
-.legend-dot{width:12px;height:4px;border-radius:2px;flex-shrink:0}
+    [data-theme="light"] .brand-icon {
+      border-color: rgba(10, 138, 101, .3)
+    }
 
-/* ── GRÁFICO ──────────────────────────────────────────────────────────────── */
-.chart-section{margin-bottom:1rem}
-.chart-card{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:1.25rem;overflow:hidden}
-.chart-tabs{display:flex;gap:4px;margin-bottom:1.25rem;background:var(--bg3);border-radius:8px;padding:4px}
-.chart-tab{flex:1;padding:7px;font-size:12px;font-weight:600;font-family:inherit;border:none;border-radius:6px;cursor:pointer;background:transparent;color:var(--muted);transition:all .2s}
-.chart-tab.active{background:var(--bg2);color:var(--text);box-shadow:0 1px 3px var(--shadow)}
-.chart-body{display:flex;flex-direction:column;gap:12px}
-.chart-group{}
-.chart-row-label{font-size:12px;font-weight:600;color:var(--text);margin-bottom:5px;display:flex;align-items:center;gap:6px}
-.chart-row-label .best-star{color:var(--teal);font-size:13px}
-.bar-track{height:28px;background:var(--bg3);border-radius:6px;overflow:hidden;position:relative}
-.bar-fill{height:100%;border-radius:6px;display:flex;align-items:center;padding-right:10px;justify-content:flex-end;transition:width .8s cubic-bezier(.4,0,.2,1);min-width:40px;position:relative}
-.bar-fill span{font-size:12px;font-weight:700;color:#fff;white-space:nowrap;text-shadow:0 1px 2px rgba(0,0,0,.3)}
-[data-theme="light"] .bar-fill span{color:#fff}
-.bar-c0{background:var(--teal)}.bar-c1{background:var(--amber)}.bar-c2{background:var(--blue)}
+    .brand-icon i {
+      font-size: 22px;
+      color: var(--teal)
+    }
 
-/* ── ROUTE CARDS ──────────────────────────────────────────────────────────── */
-.route-card{background:var(--bg2);border:1px solid var(--border);border-radius:16px;margin-bottom:10px;overflow:hidden;transition:border-color .2s;animation:fadeUp .35s ease both}
-.route-card:nth-child(1){animation-delay:.05s}.route-card:nth-child(2){animation-delay:.12s}.route-card:nth-child(3){animation-delay:.19s}
-.route-card:hover{border-color:var(--border2)}
-.route-card.best{border-color:rgba(0,200,150,.35)}
-[data-theme="light"] .route-card.best{border-color:rgba(10,138,101,.45)}
-.card-layout{display:flex}
-.card-stripe{width:4px;flex-shrink:0;background:var(--bg4)}
-.card-stripe.best{background:var(--teal)}.card-stripe.mid{background:var(--amber)}.card-stripe.c2{background:var(--blue)}
-.card-content{flex:1;padding:1.1rem 1.25rem}
-.card-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:4px;gap:8px}
-.card-name{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-.card-name h3{font-size:15px;font-weight:700;color:var(--text)}
-.tag{font-size:10px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:3px 9px;border-radius:100px}
-.tag-teal{background:var(--teal-dim);color:var(--teal);border:1px solid rgba(0,200,150,.25)}
-.tag-green{background:var(--green-dim);color:var(--green)}
-.tag-amber{background:var(--amber-dim);color:var(--amber)}
-.tag-muted{background:var(--bg4);color:var(--muted)}
-.tag-best{background:var(--teal-dim);color:var(--teal);border:1px solid rgba(0,200,150,.25);display:flex;align-items:center;gap:4px;white-space:nowrap}
-.tag-best i{font-size:12px}
-.card-via{font-size:12px;color:var(--muted);margin-bottom:14px}
-.card-via span{color:var(--muted2)}
-.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:12px}
-.metric{background:var(--bg3);border-radius:8px;padding:9px 10px}
-.metric.hl{border:1px solid rgba(0,200,150,.25)}
-.metric.hl .metric-val{color:var(--teal)}
-.metric-label{font-size:10px;color:var(--muted);display:flex;align-items:center;gap:3px;margin-bottom:4px}
-.metric-label i{font-size:12px}
-.metric-val{font-size:14px;font-weight:700;color:var(--text)}
-.metric-unit{font-size:10px;font-weight:400;color:var(--muted)}
-.traffic-section{display:flex;align-items:center;gap:10px;margin-bottom:12px}
-.traffic-title{font-size:11px;color:var(--muted);width:48px;flex-shrink:0}
-.traffic-bar{flex:1;height:3px;border-radius:2px;background:var(--bg4);overflow:hidden}
-.traffic-fill{height:100%;border-radius:2px}
-.fill-low{background:var(--green)}.fill-med{background:var(--amber)}.fill-high{background:var(--red)}
-.traffic-status{font-size:11px;font-weight:600;white-space:nowrap}
-.status-low{color:var(--green)}.status-med{color:var(--amber)}.status-high{color:var(--red)}
-.card-analysis{font-size:13px;color:var(--muted);line-height:1.7;border-top:1px solid var(--border);padding-top:10px}
-.data-sources{display:flex;align-items:center;gap:12px;margin-top:8px;flex-wrap:wrap}
-.data-chip{display:flex;align-items:center;gap:4px;font-size:10px;color:var(--muted2)}
-.data-chip i{font-size:12px}
-.chip-ors{color:var(--blue)}.chip-ai{color:var(--teal)}
+    .brand-title {
+      font-size: 26px;
+      font-weight: 700;
+      letter-spacing: -.04em;
+      color: var(--text)
+    }
 
-/* ── EMPTY / LOADING / ERROR ──────────────────────────────────────────────── */
-.state-box{text-align:center;padding:3.5rem 1rem}
-.state-box i{font-size:44px;display:block;margin-bottom:14px;color:var(--muted2)}
-.state-box p{font-size:14px;color:var(--muted);line-height:1.7}
-.state-box strong{color:var(--text);font-weight:600}
-.loading-box{display:flex;flex-direction:column;align-items:center;gap:12px;padding:3rem}
-.spinner{width:28px;height:28px;border-radius:50%;border:2px solid var(--bg4);border-top-color:var(--teal);animation:spin .7s linear infinite}
-@keyframes spin{to{transform:rotate(360deg)}}
-.loading-steps{display:flex;flex-direction:column;gap:6px;margin-top:4px;text-align:center}
-.loading-step{font-size:12px;color:var(--muted2);opacity:0;animation:appear .4s ease forwards}
-.loading-step i{font-size:13px;margin-right:4px}
-@keyframes appear{to{opacity:1}}
-.error-box{background:var(--red-dim);border:1px solid rgba(224,84,84,.2);border-radius:12px;padding:14px 16px;display:flex;align-items:flex-start;gap:10px;font-size:13px;color:var(--red)}
-.error-box i{font-size:18px;flex-shrink:0}
+    .brand-title .route {
+      font-weight: 300;
+      color: var(--teal);
+      letter-spacing: -.02em;
+      position: relative;
+      display: inline-block
+    }
 
-/* ── LEAFLET OVERRIDES ────────────────────────────────────────────────────── */
-.leaflet-container{font-family:'Plus Jakarta Sans',sans-serif}
-.leaflet-popup-content-wrapper{background:var(--bg2);color:var(--text);border:1px solid var(--border);border-radius:10px;box-shadow:0 4px 20px var(--shadow)}
-.leaflet-popup-tip{background:var(--bg2)}
-.leaflet-popup-content{font-size:13px;margin:10px 14px}
+    .brand-title .route::after {
+      content: '';
+      position: absolute;
+      left: 0;
+      bottom: 0;
+      width: 100%;
+      height: 1.5px;
+      background: var(--teal);
+      opacity: .35;
+      border-radius: 2px
+    }
 
-@media(max-width:620px){
-  .opts,.precos-strip{grid-template-columns:1fr 1fr}
-  .metrics{grid-template-columns:repeat(2,1fr)}
-  .summary-grid,.clima-row{grid-template-columns:1fr}
-}
-</style>
+    .brand-sub {
+      font-size: 11px;
+      color: var(--muted);
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      margin-top: 2px
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 8px
+    }
+
+    .theme-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      border: 1px solid var(--border2);
+      background: var(--bg2);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--muted);
+      transition: all .2s;
+      flex-shrink: 0
+    }
+
+    .theme-btn:hover {
+      color: var(--text);
+      border-color: var(--teal);
+      background: var(--teal-dim)
+    }
+
+    .theme-btn i {
+      font-size: 18px
+    }
+
+    .hbadge {
+      font-size: 11px;
+      padding: 4px 10px;
+      border-radius: 100px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      white-space: nowrap
+    }
+
+    .hbadge-teal {
+      color: var(--teal);
+      background: var(--teal-dim);
+      border: 1px solid rgba(0, 200, 150, .2)
+    }
+
+    .hbadge-blue {
+      color: var(--blue);
+      background: var(--blue-dim);
+      border: 1px solid rgba(79, 195, 247, .2)
+    }
+
+    [data-theme="light"] .hbadge-blue {
+      border-color: rgba(21, 101, 160, .2)
+    }
+
+    .pulse {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--teal);
+      animation: pulse 2s ease infinite
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        opacity: 1;
+        transform: scale(1)
+      }
+
+      50% {
+        opacity: .4;
+        transform: scale(.7)
+      }
+    }
+
+    /* ── MAIN ─────────────────────────────────────────────────────────────────── */
+    .main {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 0 1.5rem
+    }
+
+    /* ── PREÇOS ───────────────────────────────────────────────────────────────── */
+    .precos-strip {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-bottom: 1rem
+    }
+
+    .preco-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px 12px
+    }
+
+    .preco-label {
+      font-size: 10px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin-bottom: 4px
+    }
+
+    .preco-label i {
+      font-size: 12px
+    }
+
+    .preco-val {
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--text)
+    }
+
+    .preco-unit {
+      font-size: 10px;
+      font-weight: 400;
+      color: var(--muted)
+    }
+
+    .preco-fonte {
+      font-size: 10px;
+      color: var(--muted2);
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      margin-top: 3px
+    }
+
+    .fonte-anp {
+      color: var(--teal)
+    }
+
+    .fonte-est {
+      color: var(--amber)
+    }
+
+    /* ── FORM ─────────────────────────────────────────────────────────────────── */
+    .form-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      padding: 1.75rem;
+      margin-bottom: 1rem
+    }
+
+    .route-inputs {
+      margin-bottom: 1.5rem
+    }
+
+    .input-row {
+      display: flex;
+      align-items: center;
+      gap: 12px
+    }
+
+    .node {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      flex-shrink: 0
+    }
+
+    .node-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      border: 2px solid var(--muted2);
+      flex-shrink: 0
+    }
+
+    .node-dot.origin {
+      border-color: var(--teal)
+    }
+
+    .node-dot.dest {
+      border-color: var(--teal);
+      background: var(--teal)
+    }
+
+    .node-line {
+      width: 1.5px;
+      height: 22px;
+      background: linear-gradient(to bottom, var(--teal), var(--muted2));
+      margin: 3px 0
+    }
+
+    .route-input {
+      flex: 1;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 11px 16px;
+      font-size: 14px;
+      font-family: inherit;
+      color: var(--text);
+      outline: none;
+      transition: border-color .2s, background .2s
+    }
+
+    .route-input::placeholder {
+      color: var(--muted2)
+    }
+
+    .route-input:focus {
+      border-color: var(--teal);
+      background: var(--bg4)
+    }
+
+    .divider-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 1.25rem 0
+    }
+
+    .divider-line {
+      flex: 1;
+      height: 1px;
+      background: var(--border)
+    }
+
+    .divider-label {
+      font-size: 11px;
+      color: var(--muted2);
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      white-space: nowrap
+    }
+
+    .opts {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 1.5rem
+    }
+
+    .opt {
+      display: flex;
+      flex-direction: column;
+      gap: 6px
+    }
+
+    .opt-label {
+      font-size: 11px;
+      color: var(--muted);
+      letter-spacing: .05em;
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      gap: 4px
+    }
+
+    .opt-label i {
+      font-size: 13px;
+      color: var(--muted2)
+    }
+
+    .opt select,
+    .opt input[type="time"] {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 9px 12px;
+      font-size: 13px;
+      font-family: inherit;
+      color: var(--text);
+      outline: none;
+      cursor: pointer;
+      appearance: none;
+      -webkit-appearance: none;
+      transition: border-color .2s
+    }
+
+    .opt select:focus,
+    .opt input[type="time"]:focus {
+      border-color: var(--teal)
+    }
+
+    .opt select option {
+      background: var(--bg2)
+    }
+
+    .btn-analyze {
+      width: 100%;
+      padding: 14px;
+      font-size: 14px;
+      font-weight: 600;
+      font-family: inherit;
+      border-radius: 10px;
+      cursor: pointer;
+      background: var(--teal);
+      color: #021a12;
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: opacity .15s, transform .1s
+    }
+
+    .btn-analyze:hover {
+      opacity: .9
+    }
+
+    .btn-analyze:active {
+      transform: scale(.99)
+    }
+
+    .btn-analyze:disabled {
+      opacity: .4;
+      cursor: not-allowed
+    }
+
+    .btn-analyze i {
+      font-size: 18px
+    }
+
+    /* ── ALERTAS ──────────────────────────────────────────────────────────────── */
+    .alertas {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 1rem
+    }
+
+    .alerta {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 12px 14px;
+      border-radius: 10px;
+      font-size: 13px;
+      line-height: 1.5;
+      border: 1px solid transparent
+    }
+
+    .alerta i {
+      font-size: 18px;
+      flex-shrink: 0;
+      margin-top: 1px
+    }
+
+    .alerta-pico {
+      background: var(--amber-dim);
+      border-color: rgba(232, 160, 48, .25);
+      color: var(--amber)
+    }
+
+    .alerta-chuva {
+      background: var(--blue-dim);
+      border-color: rgba(79, 195, 247, .2);
+      color: var(--blue)
+    }
+
+    .alerta-perigo {
+      background: var(--red-dim);
+      border-color: rgba(224, 84, 84, .2);
+      color: var(--red)
+    }
+
+    .alerta b {
+      display: block;
+      margin-bottom: 2px
+    }
+
+    .sugestoes-horario {
+      display: flex;
+      gap: 6px;
+      margin-top: 8px;
+      flex-wrap: wrap;
+      align-items: center
+    }
+
+    .sug-btn {
+      font-size: 12px;
+      padding: 4px 10px;
+      border-radius: 100px;
+      background: rgba(232, 160, 48, .15);
+      border: 1px solid rgba(232, 160, 48, .35);
+      color: var(--amber);
+      cursor: pointer;
+      font-family: inherit;
+      transition: background .15s
+    }
+
+    .sug-btn:hover {
+      background: rgba(232, 160, 48, .28)
+    }
+
+    /* ── CLIMA ────────────────────────────────────────────────────────────────── */
+    .clima-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 1rem
+    }
+
+    .clima-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px
+    }
+
+    .clima-card.ok i.clima-icon {
+      color: var(--teal)
+    }
+
+    .clima-card.atencao i.clima-icon {
+      color: var(--amber)
+    }
+
+    .clima-card.perigo i.clima-icon {
+      color: var(--red)
+    }
+
+    i.clima-icon {
+      font-size: 24px;
+      flex-shrink: 0
+    }
+
+    .clima-local {
+      font-size: 11px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      margin-bottom: 2px
+    }
+
+    .clima-desc {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+      text-transform: capitalize
+    }
+
+    .clima-temp {
+      font-size: 12px;
+      color: var(--muted)
+    }
+
+    /* ── RESULTS ──────────────────────────────────────────────────────────────── */
+    .results-wrap {
+      animation: fadeUp .4s ease
+    }
+
+    @keyframes fadeUp {
+      from {
+        opacity: 0;
+        transform: translateY(12px)
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0)
+      }
+    }
+
+    .context-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+      gap: 8px
+    }
+
+    .context-route {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: var(--muted)
+    }
+
+    .context-route b {
+      color: var(--text);
+      font-weight: 600
+    }
+
+    .context-route i {
+      font-size: 15px
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-bottom: 1rem
+    }
+
+    .summary-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 14px
+    }
+
+    .summary-label {
+      font-size: 10px;
+      color: var(--muted);
+      letter-spacing: .07em;
+      text-transform: uppercase;
+      margin-bottom: 5px
+    }
+
+    .summary-val {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1
+    }
+
+    .summary-val.sm {
+      font-size: 13px;
+      font-weight: 500;
+      line-height: 1.3;
+      margin-top: 2px
+    }
+
+    /* ── EXPORT ───────────────────────────────────────────────────────────────── */
+    .export-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 1rem;
+      flex-wrap: wrap
+    }
+
+    .export-btn {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 9px 16px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: opacity .15s, transform .1s
+    }
+
+    .export-btn:hover {
+      opacity: .85
+    }
+
+    .export-btn:active {
+      transform: scale(.98)
+    }
+
+    .btn-gmaps {
+      background: #1a73e8;
+      color: #fff
+    }
+
+    .btn-waze {
+      background: #33ccff;
+      color: #0a2a40
+    }
+
+    /* ── MAPA ─────────────────────────────────────────────────────────────────── */
+    .map-section {
+      margin-bottom: 1rem
+    }
+
+    .section-label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: .05em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px
+    }
+
+    .map-container {
+      border-radius: 20px;
+      overflow: hidden;
+      border: 1px solid var(--border2);
+      height: 380px;
+      position: relative;
+      box-shadow:
+        0 20px 50px rgba(0, 0, 0, .25),
+        inset 0 0 0 1px rgba(255,255,255,.02);
+      background: var(--bg3);
+    }
+
+    #routeMap {
+      height: 100%;
+      width: 100%;
+    }
+
+    /* Mapa mais integrado ao tema escuro */
+    [data-theme="dark"] .leaflet-tile {
+      filter: brightness(.58) contrast(1.18) saturate(.72);
+    }
+
+    /* Controles do Leaflet */
+    .leaflet-control-zoom {
+      border: 1px solid var(--border2) !important;
+      box-shadow: 0 8px 25px rgba(0,0,0,.25) !important;
+    }
+
+    .leaflet-control-zoom a {
+      background: var(--bg2) !important;
+      color: var(--text) !important;
+      border-color: var(--border) !important;
+    }
+
+    .leaflet-control-zoom a:hover {
+      background: var(--teal-dim) !important;
+      color: var(--teal) !important;
+    }
+
+    #routeMap {
+      height: 100%;
+      width: 100%
+    }
+
+    .map-legend {
+      display: flex;
+      gap: 12px;
+      margin-top: 8px;
+      flex-wrap: wrap
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 12px;
+      color: var(--muted)
+    }
+
+    .legend-dot {
+      width: 12px;
+      height: 4px;
+      border-radius: 2px;
+      flex-shrink: 0
+    }
+
+    /* ── GRÁFICO ──────────────────────────────────────────────────────────────── */
+    .chart-section {
+      margin-bottom: 1rem
+    }
+
+    .chart-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1.25rem;
+      overflow: hidden
+    }
+
+    .chart-tabs {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 1.25rem;
+      background: var(--bg3);
+      border-radius: 8px;
+      padding: 4px
+    }
+
+    .chart-tab {
+      flex: 1;
+      padding: 7px;
+      font-size: 12px;
+      font-weight: 600;
+      font-family: inherit;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      background: transparent;
+      color: var(--muted);
+      transition: all .2s
+    }
+
+    .chart-tab.active {
+      background: var(--bg2);
+      color: var(--text);
+      box-shadow: 0 1px 3px var(--shadow)
+    }
+
+    .chart-body {
+      display: flex;
+      flex-direction: column;
+      gap: 12px
+    }
+
+    .chart-group {}
+
+    .chart-row-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 5px;
+      display: flex;
+      align-items: center;
+      gap: 6px
+    }
+
+    .chart-row-label .best-star {
+      color: var(--teal);
+      font-size: 13px
+    }
+
+    .bar-track {
+      height: 28px;
+      background: var(--bg3);
+      border-radius: 6px;
+      overflow: hidden;
+      position: relative
+    }
+
+    .bar-fill {
+      height: 100%;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      padding-right: 10px;
+      justify-content: flex-end;
+      transition: width .8s cubic-bezier(.4, 0, .2, 1);
+      min-width: 40px;
+      position: relative
+    }
+
+    .bar-fill span {
+      font-size: 12px;
+      font-weight: 700;
+      color: #fff;
+      white-space: nowrap;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, .3)
+    }
+
+    [data-theme="light"] .bar-fill span {
+      color: #fff
+    }
+
+    .bar-c0 {
+      background: var(--teal)
+    }
+
+    .bar-c1 {
+      background: var(--amber)
+    }
+
+    .bar-c2 {
+      background: var(--blue)
+    }
+
+    /* ── ROUTE CARDS ──────────────────────────────────────────────────────────── */
+    .route-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      margin-bottom: 10px;
+      overflow: hidden;
+      transition: border-color .2s;
+      animation: fadeUp .35s ease both
+    }
+
+    .route-card:nth-child(1) {
+      animation-delay: .05s
+    }
+
+    .route-card:nth-child(2) {
+      animation-delay: .12s
+    }
+
+    .route-card:nth-child(3) {
+      animation-delay: .19s
+    }
+
+    .route-card:hover {
+      border-color: var(--border2)
+    }
+
+    .route-card.best {
+      border-color: rgba(0, 200, 150, .35)
+    }
+
+    [data-theme="light"] .route-card.best {
+      border-color: rgba(10, 138, 101, .45)
+    }
+
+    .card-layout {
+      display: flex
+    }
+
+    .card-stripe {
+      width: 4px;
+      flex-shrink: 0;
+      background: var(--bg4)
+    }
+
+    .card-stripe.best {
+      background: var(--teal)
+    }
+
+    .card-stripe.mid {
+      background: var(--amber)
+    }
+
+    .card-stripe.c2 {
+      background: var(--blue)
+    }
+
+    .card-content {
+      flex: 1;
+      padding: 1.1rem 1.25rem
+    }
+
+    .card-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 4px;
+      gap: 8px
+    }
+
+    .card-name {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap
+    }
+
+    .card-name h3 {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text)
+    }
+
+    .tag {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+      padding: 3px 9px;
+      border-radius: 100px
+    }
+
+    .tag-teal {
+      background: var(--teal-dim);
+      color: var(--teal);
+      border: 1px solid rgba(0, 200, 150, .25)
+    }
+
+    .tag-green {
+      background: var(--green-dim);
+      color: var(--green)
+    }
+
+    .tag-amber {
+      background: var(--amber-dim);
+      color: var(--amber)
+    }
+
+    .tag-muted {
+      background: var(--bg4);
+      color: var(--muted)
+    }
+
+    .tag-best {
+      background: var(--teal-dim);
+      color: var(--teal);
+      border: 1px solid rgba(0, 200, 150, .25);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      white-space: nowrap
+    }
+
+    .tag-best i {
+      font-size: 12px
+    }
+
+    .card-via {
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 14px
+    }
+
+    .card-via span {
+      color: var(--muted2)
+    }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+      margin-bottom: 12px
+    }
+
+    .metric {
+      background: var(--bg3);
+      border-radius: 8px;
+      padding: 9px 10px
+    }
+
+    .metric.hl {
+      border: 1px solid rgba(0, 200, 150, .25)
+    }
+
+    .metric.hl .metric-val {
+      color: var(--teal)
+    }
+
+    .metric-label {
+      font-size: 10px;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      margin-bottom: 4px
+    }
+
+    .metric-label i {
+      font-size: 12px
+    }
+
+    .metric-val {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text)
+    }
+
+    .metric-unit {
+      font-size: 10px;
+      font-weight: 400;
+      color: var(--muted)
+    }
+
+    .traffic-section {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px
+    }
+
+    .traffic-title {
+      font-size: 11px;
+      color: var(--muted);
+      width: 48px;
+      flex-shrink: 0
+    }
+
+    .traffic-bar {
+      flex: 1;
+      height: 3px;
+      border-radius: 2px;
+      background: var(--bg4);
+      overflow: hidden
+    }
+
+    .traffic-fill {
+      height: 100%;
+      border-radius: 2px
+    }
+
+    .fill-low {
+      background: var(--green)
+    }
+
+    .fill-med {
+      background: var(--amber)
+    }
+
+    .fill-high {
+      background: var(--red)
+    }
+
+    .traffic-status {
+      font-size: 11px;
+      font-weight: 600;
+      white-space: nowrap
+    }
+
+    .status-low {
+      color: var(--green)
+    }
+
+    .status-med {
+      color: var(--amber)
+    }
+
+    .status-high {
+      color: var(--red)
+    }
+
+    .card-analysis {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.7;
+      border-top: 1px solid var(--border);
+      padding-top: 10px
+    }
+
+    .data-sources {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-top: 8px;
+      flex-wrap: wrap
+    }
+
+    .data-chip {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 10px;
+      color: var(--muted2)
+    }
+
+    .data-chip i {
+      font-size: 12px
+    }
+
+    .chip-ors {
+      color: var(--blue)
+    }
+
+    .chip-ai {
+      color: var(--teal)
+    }
+
+    /* ── EMPTY / LOADING / ERROR ──────────────────────────────────────────────── */
+    .state-box {
+      text-align: center;
+      padding: 3.5rem 1rem
+    }
+
+    .state-box i {
+      font-size: 44px;
+      display: block;
+      margin-bottom: 14px;
+      color: var(--muted2)
+    }
+
+    .state-box p {
+      font-size: 14px;
+      color: var(--muted);
+      line-height: 1.7
+    }
+
+    .state-box strong {
+      color: var(--text);
+      font-weight: 600
+    }
+
+    .loading-box {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      padding: 3rem
+    }
+
+    .spinner {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      border: 2px solid var(--bg4);
+      border-top-color: var(--teal);
+      animation: spin .7s linear infinite
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg)
+      }
+    }
+
+    .loading-steps {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-top: 4px;
+      text-align: center
+    }
+
+    .loading-step {
+      font-size: 12px;
+      color: var(--muted2);
+      opacity: 0;
+      animation: appear .4s ease forwards
+    }
+
+    .loading-step i {
+      font-size: 13px;
+      margin-right: 4px
+    }
+
+    @keyframes appear {
+      to {
+        opacity: 1
+      }
+    }
+
+    .error-box {
+      background: var(--red-dim);
+      border: 1px solid rgba(224, 84, 84, .2);
+      border-radius: 12px;
+      padding: 14px 16px;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      font-size: 13px;
+      color: var(--red)
+    }
+
+    .error-box i {
+      font-size: 18px;
+      flex-shrink: 0
+    }
+
+    /* ── LEAFLET OVERRIDES ────────────────────────────────────────────────────── */
+    .leaflet-container {
+      font-family: 'Plus Jakarta Sans', sans-serif
+    }
+
+    .leaflet-popup-content-wrapper {
+      background: var(--bg2);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      box-shadow: 0 4px 20px var(--shadow)
+    }
+
+    .leaflet-popup-tip {
+      background: var(--bg2)
+    }
+
+    .leaflet-popup-content {
+      font-size: 13px;
+      margin: 10px 14px
+    }
+
+    @media(max-width:620px) {
+
+      .opts,
+      .precos-strip {
+        grid-template-columns: 1fr 1fr
+      }
+
+      .metrics {
+        grid-template-columns: repeat(2, 1fr)
+      }
+
+      .summary-grid,
+      .clima-row {
+        grid-template-columns: 1fr
+      }
+    }
+  </style>
 </head>
+
 <body>
 
-<header class="header">
-  <div class="brand">
-    <div class="brand-icon"><i class="ti ti-navigation"></i></div>
-    <div>
-      <div class="brand-title">Next<span class="route">Route</span></div>
-      <div class="brand-sub">Rotas inteligentes · Dados reais</div>
-    </div>
-  </div>
-  <div class="header-right">
-    <div class="hbadge hbadge-teal"><span class="pulse"></span> GPS real</div>
-    <div class="hbadge hbadge-blue"><i class="ti ti-droplet" style="font-size:12px"></i> ANP</div>
-    <button class="theme-btn" onclick="toggleTheme()" title="Alternar tema" id="themeBtn">
-      <i class="ti ti-moon" id="themeIcon"></i>
-    </button>
-  </div>
-</header>
-
-<main class="main">
-
-  <!-- Preços ANP -->
-  <div class="precos-strip">
-    <div class="preco-card">
-      <div class="preco-label"><i class="ti ti-droplet"></i> Gasolina</div>
-      <div class="preco-val" id="pGasolina">—<span class="preco-unit"> /L</span></div>
-      <div class="preco-fonte" id="pFonte" style="font-size:10px;color:var(--muted2)">carregando...</div>
-    </div>
-    <div class="preco-card">
-      <div class="preco-label"><i class="ti ti-droplet"></i> Etanol</div>
-      <div class="preco-val" id="pEtanol">—<span class="preco-unit"> /L</span></div>
-    </div>
-    <div class="preco-card">
-      <div class="preco-label"><i class="ti ti-droplet"></i> Diesel</div>
-      <div class="preco-val" id="pDiesel">—<span class="preco-unit"> /L</span></div>
-    </div>
-    <div class="preco-card">
-      <div class="preco-label"><i class="ti ti-bolt"></i> Elétrico</div>
-      <div class="preco-val">R$ 0,75<span class="preco-unit"> /kWh</span></div>
-    </div>
-  </div>
-
-  <!-- Formulário -->
-  <div class="form-card">
-    <div class="route-inputs">
-      <div class="input-row">
-        <div class="node"><div class="node-dot origin"></div><div class="node-line"></div></div>
-        <input class="route-input" type="text" id="origin" placeholder="De onde você sai?" value="Campinas, SP"/>
-      </div>
-      <div class="input-row">
-        <div class="node"><div class="node-dot dest"></div></div>
-        <input class="route-input" type="text" id="destination" placeholder="Para onde vai?" value="São Paulo, SP"/>
+  <header class="header">
+    <div class="brand">
+      <div class="brand-icon"><i class="ti ti-navigation"></i></div>
+      <div>
+        <div class="brand-title">Next<span class="route">Route</span></div>
+        <div class="brand-sub">Rotas inteligentes · Dados reais</div>
       </div>
     </div>
-    <div class="divider-row"><div class="divider-line"></div><div class="divider-label">detalhes da viagem</div><div class="divider-line"></div></div>
-    <div class="opts">
-      <div class="opt">
-        <div class="opt-label"><i class="ti ti-car"></i> Veículo</div>
-        <select id="vehicle">
-          <option value="carro_flex">Carro flex</option>
-          <option value="carro_gasolina">Gasolina</option>
-          <option value="carro_etanol">Etanol</option>
-          <option value="diesel">Diesel / Caminhão</option>
-          <option value="moto">Moto</option>
-          <option value="eletrico">Elétrico</option>
-        </select>
+    <div class="header-right">
+      <div class="hbadge hbadge-teal"><span class="pulse"></span> GPS real</div>
+      <div class="hbadge hbadge-blue"><i class="ti ti-droplet" style="font-size:12px"></i> ANP</div>
+      <button class="theme-btn" onclick="toggleTheme()" title="Alternar tema" id="themeBtn">
+        <i class="ti ti-moon" id="themeIcon"></i>
+      </button>
+    </div>
+  </header>
+
+  <main class="main">
+
+    <!-- Preços ANP -->
+    <div class="precos-strip">
+      <div class="preco-card">
+        <div class="preco-label"><i class="ti ti-droplet"></i> Gasolina</div>
+        <div class="preco-val" id="pGasolina">—<span class="preco-unit"> /L</span></div>
+        <div class="preco-fonte" id="pFonte" style="font-size:10px;color:var(--muted2)">carregando...</div>
       </div>
-      <div class="opt">
-        <div class="opt-label"><i class="ti ti-clock"></i> Horário</div>
-        <input type="time" id="departure" value="08:00"/>
+      <div class="preco-card">
+        <div class="preco-label"><i class="ti ti-droplet"></i> Etanol</div>
+        <div class="preco-val" id="pEtanol">—<span class="preco-unit"> /L</span></div>
       </div>
-      <div class="opt">
-        <div class="opt-label"><i class="ti ti-adjustments-horizontal"></i> Prioridade</div>
-        <select id="priority">
-          <option value="equilibrado">Equilibrado</option>
-          <option value="menor_tempo">Menor tempo</option>
-          <option value="menor_combustivel">Menos combustível</option>
-          <option value="menor_pedagio">Menos pedágio</option>
-          <option value="evitar_transito">Evitar trânsito</option>
-        </select>
+      <div class="preco-card">
+        <div class="preco-label"><i class="ti ti-droplet"></i> Diesel</div>
+        <div class="preco-val" id="pDiesel">—<span class="preco-unit"> /L</span></div>
+      </div>
+      <div class="preco-card">
+        <div class="preco-label"><i class="ti ti-bolt"></i> Elétrico</div>
+        <div class="preco-val">R$ 0,75<span class="preco-unit"> /kWh</span></div>
       </div>
     </div>
-    <button class="btn-analyze" id="analyzeBtn" onclick="analyzeRoutes()">
-      <i class="ti ti-route"></i> Encontrar melhores rotas
-    </button>
-  </div>
 
-  <div id="results">
-    <div class="state-box">
-      <i class="ti ti-map-2"></i>
-      <p>Preencha sua <strong>origem</strong> e <strong>destino</strong> acima.<br>
-      O NextRoute exibe o traçado real no mapa e compara as rotas graficamente.</p>
+    <!-- Formulário -->
+    <div class="form-card">
+      <div class="route-inputs">
+        <div class="input-row">
+          <div class="node">
+            <div class="node-dot origin"></div>
+            <div class="node-line"></div>
+          </div>
+          <input class="route-input" type="text" id="origin" placeholder="De onde você sai?" value="Campinas, SP" />
+        </div>
+        <div class="input-row">
+          <div class="node">
+            <div class="node-dot dest"></div>
+          </div>
+          <input class="route-input" type="text" id="destination" placeholder="Para onde vai?" value="São Paulo, SP" />
+        </div>
+      </div>
+      <div class="divider-row">
+        <div class="divider-line"></div>
+        <div class="divider-label">detalhes da viagem</div>
+        <div class="divider-line"></div>
+      </div>
+      <div class="opts">
+        <div class="opt">
+          <div class="opt-label"><i class="ti ti-car"></i> Veículo</div>
+          <select id="vehicle">
+            <option value="carro_flex">Carro flex</option>
+            <option value="carro_gasolina">Gasolina</option>
+            <option value="carro_etanol">Etanol</option>
+            <option value="diesel">Diesel / Caminhão</option>
+            <option value="moto">Moto</option>
+            <option value="eletrico">Elétrico</option>
+          </select>
+        </div>
+        <div class="opt">
+          <div class="opt-label"><i class="ti ti-clock"></i> Horário</div>
+          <input type="time" id="departure" value="08:00" />
+        </div>
+        <div class="opt">
+          <div class="opt-label"><i class="ti ti-adjustments-horizontal"></i> Prioridade</div>
+          <select id="priority">
+            <option value="equilibrado">Equilibrado</option>
+            <option value="menor_tempo">Menor tempo</option>
+            <option value="menor_combustivel">Menos combustível</option>
+            <option value="menor_pedagio">Menos pedágio</option>
+            <option value="evitar_transito">Evitar trânsito</option>
+          </select>
+        </div>
+      </div>
+      <button class="btn-analyze" id="analyzeBtn" onclick="analyzeRoutes()">
+        <i class="ti ti-route"></i> Encontrar melhores rotas
+      </button>
     </div>
-  </div>
 
-</main>
+    <div id="results">
+      <div class="state-box">
+        <i class="ti ti-map-2"></i>
+        <p>Preencha sua <strong>origem</strong> e <strong>destino</strong> acima.<br>
+          O NextRoute exibe o traçado real no mapa e compara as rotas graficamente.</p>
+      </div>
+    </div>
 
-<script>
-// ── TEMA ───────────────────────────────────────────────────────────────────────
-const savedTheme = localStorage.getItem('nr-theme') || 'dark';
-applyTheme(savedTheme);
+  </main>
 
-function applyTheme(theme) {
-  document.documentElement.setAttribute('data-theme', theme);
-  const icon = document.getElementById('themeIcon');
-  if (icon) icon.className = theme === 'dark' ? 'ti ti-sun' : 'ti ti-moon';
-  localStorage.setItem('nr-theme', theme);
-  if (window.leafletMap) updateMapTiles(theme);
-}
+  <script>
+    // ── TEMA ───────────────────────────────────────────────────────────────────────
+    const savedTheme = localStorage.getItem('nr-theme') || 'dark';
+    applyTheme(savedTheme);
 
-function toggleTheme() {
-  const current = document.documentElement.getAttribute('data-theme');
-  applyTheme(current === 'dark' ? 'light' : 'dark');
-}
+    function applyTheme(theme) {
+      document.documentElement.setAttribute('data-theme', theme);
+      const icon = document.getElementById('themeIcon');
+      if (icon) icon.className = theme === 'dark' ? 'ti ti-sun' : 'ti ti-moon';
+      localStorage.setItem('nr-theme', theme);
+      if (window.leafletMap) updateMapTiles(theme);
+    }
 
-// ── PREÇOS ANP ─────────────────────────────────────────────────────────────────
-async function carregarPrecos() {
-  try {
-    const res  = await fetch('/api/precos');
-    const data = await res.json();
-    document.getElementById('pGasolina').innerHTML = `R$ ${(+data.gasolina).toFixed(2)}<span class="preco-unit"> /L</span>`;
-    document.getElementById('pEtanol').innerHTML   = `R$ ${(+data.etanol).toFixed(2)}<span class="preco-unit"> /L</span>`;
-    document.getElementById('pDiesel').innerHTML   = `R$ ${(+data.diesel).toFixed(2)}<span class="preco-unit"> /L</span>`;
-    const isANP = data.fonte === 'ANP';
-    document.getElementById('pFonte').innerHTML    =
-      `<i class="ti ti-${isANP?'check':'info-circle'}"></i><span class="${isANP?'fonte-anp':'fonte-est'}">${data.fonte} · ${data.data}</span>`;
-  } catch {}
-}
-carregarPrecos();
+    function toggleTheme() {
+      const current = document.documentElement.getAttribute('data-theme');
+      applyTheme(current === 'dark' ? 'light' : 'dark');
+    }
 
-// ── MAPA LEAFLET ───────────────────────────────────────────────────────────────
-let leafletMap  = null;
-let tileLayer   = null;
-let routeLayers = [];
-const ROUTE_COLORS = ['#00c896', '#e8a030', '#4fc3f7'];
+    // ── PREÇOS ANP ─────────────────────────────────────────────────────────────────
+    async function carregarPrecos() {
+      try {
+        const res = await fetch('/api/precos');
+        const data = await res.json();
+        document.getElementById('pGasolina').innerHTML = `R$ ${(+data.gasolina).toFixed(2)}<span class="preco-unit"> /L</span>`;
+        document.getElementById('pEtanol').innerHTML = `R$ ${(+data.etanol).toFixed(2)}<span class="preco-unit"> /L</span>`;
+        document.getElementById('pDiesel').innerHTML = `R$ ${(+data.diesel).toFixed(2)}<span class="preco-unit"> /L</span>`;
+        const isANP = data.fonte === 'ANP';
+        document.getElementById('pFonte').innerHTML =
+          `<i class="ti ti-${isANP ? 'check' : 'info-circle'}"></i><span class="${isANP ? 'fonte-anp' : 'fonte-est'}">${data.fonte} · ${data.data}</span>`;
+      } catch { }
+    }
+    carregarPrecos();
 
-const TILES = {
-  dark:  { url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',   attr: '© CartoDB' },
-  light: { url: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',  attr: '© CartoDB' },
-};
+    // ── MAPA LEAFLET ───────────────────────────────────────────────────────────────
+    let leafletMap = null;
+    let tileLayer = null;
+    let routeLayers = [];
+    const ROUTE_COLORS = ['#00c896', '#e8a030', '#4fc3f7'];
 
-function initMap(coordOrigem, coordDestino, rotas) {
-  const mapEl = document.getElementById('routeMap');
-  if (!mapEl) return;
+    const TILES = {
+      dark: {
+        url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+        attr: '&copy; OpenStreetMap contributors'
+      },
+      light: {
+        url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+        attr: '&copy; OpenStreetMap contributors'
+      },
+    };
 
-  if (leafletMap) {
-    leafletMap.remove();
-    leafletMap = null;
-  }
+    function initMap(coordOrigem, coordDestino, rotas) {
+      const mapEl = document.getElementById('routeMap');
+      if (!mapEl) return;
 
-  const theme = document.documentElement.getAttribute('data-theme') || 'dark';
-  leafletMap = L.map('routeMap', { zoomControl: true, attributionControl: true });
-  window.leafletMap = leafletMap;
+      if (leafletMap) {
+        leafletMap.remove();
+        leafletMap = null;
+      }
 
-  const t = TILES[theme] || TILES.dark;
-  tileLayer = L.tileLayer(t.url, { attribution: t.attr, maxZoom: 19 }).addTo(leafletMap);
+      const theme = document.documentElement.getAttribute('data-theme') || 'dark';
+      leafletMap = L.map('routeMap', { zoomControl: true, attributionControl: true });
+      window.leafletMap = leafletMap;
 
-  routeLayers = [];
-  const allBounds = [];
+      const t = TILES[theme] || TILES.dark;
+      tileLayer = L.tileLayer(t.url, { attribution: t.attr, maxZoom: 19 }).addTo(leafletMap);
 
-  rotas.forEach((rota, i) => {
-    if (!rota.geometria?.length) return;
-    const cor    = ROUTE_COLORS[i % ROUTE_COLORS.length];
-    const weight = rota.melhor ? 6 : 3.5;
-    const opacity = rota.melhor ? 0.95 : 0.65;
+      routeLayers = [];
+      const allBounds = [];
 
-    const poly = L.polyline(rota.geometria, {
-      color: cor, weight, opacity, lineCap: 'round', lineJoin: 'round',
-    }).addTo(leafletMap);
+      rotas.forEach((rota, i) => {
+        if (!rota.geometria?.length) return;
+        const cor = ROUTE_COLORS[i % ROUTE_COLORS.length];
+        const weight = rota.melhor ? 6 : 3.5;
+        const opacity = rota.melhor ? 0.95 : 0.65;
 
-    poly.bindPopup(`<b style="color:${cor}">${rota.nome}</b><br>${rota.distancia_km} km · ${fmtTime(rota.tempo_min)}<br>R$ ${(+(rota.custo_combustivel_reais||0) + +(rota.pedagio_reais||0)).toFixed(2)} total`);
+        // Sombra da rota
+        const shadow = L.polyline(rota.geometria, {
+          color: '#000000',
+          weight: rota.melhor ? 11 : 8,
+          opacity: 0.35,
+          lineCap: 'round',
+          lineJoin: 'round',
+        }).addTo(leafletMap);
 
-    routeLayers.push(poly);
-    allBounds.push(...rota.geometria);
-  });
+        // Rota principal
+        const poly = L.polyline(rota.geometria, {
+          color: cor,
+          weight: rota.melhor ? 6 : 4,
+          opacity: rota.melhor ? 1 : 0.72,
+          lineCap: 'round',
+          lineJoin: 'round',
+        }).addTo(leafletMap);
 
-  // Marcadores
-  const iconOrig = L.divIcon({ html: `<div style="width:14px;height:14px;border-radius:50%;background:#00c896;border:3px solid white;box-shadow:0 2px 6px rgba(0,0,0,.4)"></div>`, iconSize:[14,14], iconAnchor:[7,7], className:'' });
-  const iconDest = L.divIcon({ html: `<div style="width:14px;height:14px;border-radius:50%;background:#e05454;border:3px solid white;box-shadow:0 2px 6px rgba(0,0,0,.4)"></div>`, iconSize:[14,14], iconAnchor:[7,7], className:'' });
-  L.marker(coordOrigem, { icon: iconOrig }).addTo(leafletMap).bindPopup('Origem');
-  L.marker(coordDestino, { icon: iconDest }).addTo(leafletMap).bindPopup('Destino');
+        poly.bindPopup(`<b style="color:${cor}">${rota.nome}</b><br>${rota.distancia_km} km · ${fmtTime(rota.tempo_min)}<br>R$ ${(+(rota.custo_combustivel_reais || 0) + +(rota.pedagio_reais || 0)).toFixed(2)} total`);
 
-  if (allBounds.length) leafletMap.fitBounds(L.latLngBounds(allBounds), { padding: [28, 28] });
-}
+        routeLayers.push(poly);
+        allBounds.push(...rota.geometria);
+      });
 
-function updateMapTiles(theme) {
-  if (!leafletMap || !tileLayer) return;
-  leafletMap.removeLayer(tileLayer);
-  const t = TILES[theme] || TILES.light;
-  tileLayer = L.tileLayer(t.url, { attribution: t.attr, maxZoom: 19 }).addTo(leafletMap);
-}
+      // Marcadores
+      const iconOrig = L.divIcon({ html: `<div style="width:14px;height:14px;border-radius:50%;background:#00c896;border:3px solid white;box-shadow:0 2px 6px rgba(0,0,0,.4)"></div>`, iconSize: [14, 14], iconAnchor: [7, 7], className: '' });
+      const iconDest = L.divIcon({ html: `<div style="width:14px;height:14px;border-radius:50%;background:#e05454;border:3px solid white;box-shadow:0 2px 6px rgba(0,0,0,.4)"></div>`, iconSize: [14, 14], iconAnchor: [7, 7], className: '' });
+      L.marker(coordOrigem, { icon: iconOrig }).addTo(leafletMap).bindPopup('Origem');
+      L.marker(coordDestino, { icon: iconDest }).addTo(leafletMap).bindPopup('Destino');
 
-// ── GRÁFICO COMPARATIVO ────────────────────────────────────────────────────────
-let chartData    = [];
-let activeMetric = 'custo';
+      if (allBounds.length) leafletMap.fitBounds(L.latLngBounds(allBounds), { padding: [28, 28] });
+    }
 
-function renderChart(rotas) {
-  chartData = rotas;
-  showMetric('custo');
-}
+    function updateMapTiles(theme) {
+      if (!leafletMap || !tileLayer) return;
+      leafletMap.removeLayer(tileLayer);
+      const t = TILES[theme] || TILES.light;
+      tileLayer = L.tileLayer(t.url, { attribution: t.attr, maxZoom: 19 }).addTo(leafletMap);
+    }
 
-function showMetric(metrica) {
-  activeMetric = metrica;
-  document.querySelectorAll('.chart-tab').forEach(t => t.classList.toggle('active', t.dataset.m === metrica));
+    // ── GRÁFICO COMPARATIVO ────────────────────────────────────────────────────────
+    let chartData = [];
+    let activeMetric = 'custo';
 
-  const body  = document.getElementById('chartBody');
-  if (!body || !chartData.length) return;
+    function renderChart(rotas) {
+      chartData = rotas;
+      showMetric('custo');
+    }
 
-  const getData = r => {
-    if (metrica === 'custo')     return { val: +(r.custo_combustivel_reais||0) + +(r.pedagio_reais||0), fmt: v => `R$ ${v.toFixed(2)}` };
-    if (metrica === 'tempo')     return { val: r.tempo_min, fmt: v => fmtTime(v) };
-    if (metrica === 'distancia') return { val: r.distancia_km, fmt: v => `${v} km` };
-  };
+    function showMetric(metrica) {
+      activeMetric = metrica;
+      document.querySelectorAll('.chart-tab').forEach(t => t.classList.toggle('active', t.dataset.m === metrica));
 
-  const values  = chartData.map(r => getData(r).val);
-  const maxVal  = Math.max(...values);
-  const { fmt } = getData(chartData[0]);
+      const body = document.getElementById('chartBody');
+      if (!body || !chartData.length) return;
 
-  body.innerHTML = chartData.map((r, i) => {
-    const d    = getData(r);
-    const pct  = maxVal > 0 ? Math.max((d.val / maxVal) * 100, 8) : 8;
-    const cor  = ROUTE_COLORS[i % ROUTE_COLORS.length];
-    const star = r.melhor ? '<span class="best-star">✦</span>' : '';
-    return `<div class="chart-group">
+      const getData = r => {
+        if (metrica === 'custo') return { val: +(r.custo_combustivel_reais || 0) + +(r.pedagio_reais || 0), fmt: v => `R$ ${v.toFixed(2)}` };
+        if (metrica === 'tempo') return { val: r.tempo_min, fmt: v => fmtTime(v) };
+        if (metrica === 'distancia') return { val: r.distancia_km, fmt: v => `${v} km` };
+      };
+
+      const values = chartData.map(r => getData(r).val);
+      const maxVal = Math.max(...values);
+      const { fmt } = getData(chartData[0]);
+
+      body.innerHTML = chartData.map((r, i) => {
+        const d = getData(r);
+        const pct = maxVal > 0 ? Math.max((d.val / maxVal) * 100, 8) : 8;
+        const cor = ROUTE_COLORS[i % ROUTE_COLORS.length];
+        const star = r.melhor ? '<span class="best-star">✦</span>' : '';
+        return `<div class="chart-group">
       <div class="chart-row-label">${star}${r.nome}</div>
       <div class="bar-track">
         <div class="bar-fill bar-c${i}" style="width:${pct}%;background:${cor}">
@@ -473,24 +1597,24 @@ function showMetric(metrica) {
         </div>
       </div>
     </div>`;
-  }).join('');
-}
+      }).join('');
+    }
 
-// ── ANÁLISE DE ROTAS ───────────────────────────────────────────────────────────
-async function analyzeRoutes() {
-  const origin      = document.getElementById('origin').value.trim();
-  const destination = document.getElementById('destination').value.trim();
-  const vehicle     = document.getElementById('vehicle').value;
-  const departure   = document.getElementById('departure').value;
-  const priority    = document.getElementById('priority').value;
+    // ── ANÁLISE DE ROTAS ───────────────────────────────────────────────────────────
+    async function analyzeRoutes() {
+      const origin = document.getElementById('origin').value.trim();
+      const destination = document.getElementById('destination').value.trim();
+      const vehicle = document.getElementById('vehicle').value;
+      const departure = document.getElementById('departure').value;
+      const priority = document.getElementById('priority').value;
 
-  if (!origin || !destination) { showError('Preencha a origem e o destino.'); return; }
+      if (!origin || !destination) { showError('Preencha a origem e o destino.'); return; }
 
-  const btn = document.getElementById('analyzeBtn');
-  btn.disabled = true;
-  btn.innerHTML = '<div class="spinner" style="border-top-color:#021a12;border-color:rgba(0,0,0,.15);width:18px;height:18px"></div> Calculando...';
+      const btn = document.getElementById('analyzeBtn');
+      btn.disabled = true;
+      btn.innerHTML = '<div class="spinner" style="border-top-color:#021a12;border-color:rgba(0,0,0,.15);width:18px;height:18px"></div> Calculando...';
 
-  document.getElementById('results').innerHTML = `
+      document.getElementById('results').innerHTML = `
     <div class="loading-box">
       <div class="spinner"></div>
       <div class="loading-steps">
@@ -501,124 +1625,124 @@ async function analyzeRoutes() {
       </div>
     </div>`;
 
-  try {
-    const res  = await fetch('/api/rotas', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ origin, destination, vehicle, departure, priority }),
-    });
-    const data = await res.json();
-    if (data.error) { showError(data.error); return; }
-    renderResults(data);
-  } catch {
-    showError('Não foi possível conectar ao servidor. Verifique se "node server.js" está rodando.');
-  }
+      try {
+        const res = await fetch('/api/rotas', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ origin, destination, vehicle, departure, priority }),
+        });
+        const data = await res.json();
+        if (data.error) { showError(data.error); return; }
+        renderResults(data);
+      } catch {
+        showError('Não foi possível conectar ao servidor. Verifique se "node server.js" está rodando.');
+      }
 
-  btn.disabled = false;
-  btn.innerHTML = '<i class="ti ti-route"></i> Encontrar melhores rotas';
-}
+      btn.disabled = false;
+      btn.innerHTML = '<i class="ti ti-route"></i> Encontrar melhores rotas';
+    }
 
-function showError(msg) {
-  document.getElementById('results').innerHTML =
-    `<div class="error-box"><i class="ti ti-alert-circle"></i><span>${msg}</span></div>`;
-}
+    function showError(msg) {
+      document.getElementById('results').innerHTML =
+        `<div class="error-box"><i class="ti ti-alert-circle"></i><span>${msg}</span></div>`;
+    }
 
-function fmtTime(min) {
-  if (min >= 60) return Math.floor(min/60) + 'h' + (min%60 ? ' ' + min%60 + 'min' : '');
-  return min + 'min';
-}
+    function fmtTime(min) {
+      if (min >= 60) return Math.floor(min / 60) + 'h' + (min % 60 ? ' ' + min % 60 + 'min' : '');
+      return min + 'min';
+    }
 
-function aplicarHorario(h) { document.getElementById('departure').value = h; }
+    function aplicarHorario(h) { document.getElementById('departure').value = h; }
 
-// ── RENDERIZAÇÃO ───────────────────────────────────────────────────────────────
-function renderResults(data) {
-  const tfill   = { baixo:'fill-low', moderado:'fill-med', intenso:'fill-high' };
-  const twidth  = { baixo:'22%', moderado:'55%', intenso:'88%' };
-  const tstatus = {
-    baixo:   '<span class="traffic-status status-low">Baixo</span>',
-    moderado:'<span class="traffic-status status-med">Moderado</span>',
-    intenso: '<span class="traffic-status status-high">Intenso</span>',
-  };
-  const dtagClass = { 'Mais rápida':'tag-green', 'Mais econômica':'tag-teal', 'Menos pedágio':'tag-teal' };
-  const climaIcon = { storm:'ti-storm', sun:'ti-sun', 'cloud-rain':'ti-cloud-rain', snowflake:'ti-snowflake', mist:'ti-mist', cloud:'ti-cloud' };
+    // ── RENDERIZAÇÃO ───────────────────────────────────────────────────────────────
+    function renderResults(data) {
+      const tfill = { baixo: 'fill-low', moderado: 'fill-med', intenso: 'fill-high' };
+      const twidth = { baixo: '22%', moderado: '55%', intenso: '88%' };
+      const tstatus = {
+        baixo: '<span class="traffic-status status-low">Baixo</span>',
+        moderado: '<span class="traffic-status status-med">Moderado</span>',
+        intenso: '<span class="traffic-status status-high">Intenso</span>',
+      };
+      const dtagClass = { 'Mais rápida': 'tag-green', 'Mais econômica': 'tag-teal', 'Menos pedágio': 'tag-teal' };
+      const climaIcon = { storm: 'ti-storm', sun: 'ti-sun', 'cloud-rain': 'ti-cloud-rain', snowflake: 'ti-snowflake', mist: 'ti-mist', cloud: 'ti-cloud' };
 
-  const costs   = data.rotas.map(r => +(r.custo_combustivel_reais||0) + +(r.pedagio_reais||0));
-  const minCost = Math.min(...costs);
-  const minTime = Math.min(...data.rotas.map(r => r.tempo_min));
-  const best    = data.rotas.find(r => r.melhor) || data.rotas[0];
+      const costs = data.rotas.map(r => +(r.custo_combustivel_reais || 0) + +(r.pedagio_reais || 0));
+      const minCost = Math.min(...costs);
+      const minTime = Math.min(...data.rotas.map(r => r.tempo_min));
+      const best = data.rotas.find(r => r.melhor) || data.rotas[0];
 
-  let html = '<div class="results-wrap">';
+      let html = '<div class="results-wrap">';
 
-  // ── Alertas ────────────────────────────────────────────────────────────────
-  const alertas = [];
-  if (data.melhorHorario?.emPico) {
-    const sugs = (data.melhorHorario.sugestoes||[]).map(h =>
-      `<button class="sug-btn" onclick="aplicarHorario('${h}')">${h}</button>`).join('');
-    alertas.push(`<div class="alerta alerta-pico">
+      // ── Alertas ────────────────────────────────────────────────────────────────
+      const alertas = [];
+      if (data.melhorHorario?.emPico) {
+        const sugs = (data.melhorHorario.sugestoes || []).map(h =>
+          `<button class="sug-btn" onclick="aplicarHorario('${h}')">${h}</button>`).join('');
+        alertas.push(`<div class="alerta alerta-pico">
       <i class="ti ti-clock-exclamation"></i>
       <div><b>Horário de pico — ${data.melhorHorario.label}</b>${data.melhorHorario.mensagem}
         <div class="sugestoes-horario"><span style="font-size:12px;margin-right:2px">Sair às:</span>${sugs}</div>
       </div></div>`);
-  }
-  for (const c of [data.clima?.origem, data.clima?.destino].filter(Boolean)) {
-    if (c?.alerta) {
-      const cls  = c.nivel === 'perigo' ? 'alerta-perigo' : 'alerta-chuva';
-      const icon = climaIcon[c.icone] || 'ti-cloud';
-      alertas.push(`<div class="alerta ${cls}"><i class="ti ${icon}"></i><div><b>${c.label}</b> — ${c.descricao} · ${c.temperatura}°C. Dirija com atenção.</div></div>`);
-    }
-  }
-  if (alertas.length) html += `<div class="alertas">${alertas.join('')}</div>`;
+      }
+      for (const c of [data.clima?.origem, data.clima?.destino].filter(Boolean)) {
+        if (c?.alerta) {
+          const cls = c.nivel === 'perigo' ? 'alerta-perigo' : 'alerta-chuva';
+          const icon = climaIcon[c.icone] || 'ti-cloud';
+          alertas.push(`<div class="alerta ${cls}"><i class="ti ${icon}"></i><div><b>${c.label}</b> — ${c.descricao} · ${c.temperatura}°C. Dirija com atenção.</div></div>`);
+        }
+      }
+      if (alertas.length) html += `<div class="alertas">${alertas.join('')}</div>`;
 
-  // ── Clima ──────────────────────────────────────────────────────────────────
-  const climaValidos = [data.clima?.origem, data.clima?.destino].filter(c => c?.descricao);
-  if (climaValidos.length) {
-    html += '<div class="clima-row">';
-    for (const c of climaValidos) {
-      const icon = climaIcon[c.icone] || 'ti-sun';
-      html += `<div class="clima-card ${c.nivel||'ok'}">
+      // ── Clima ──────────────────────────────────────────────────────────────────
+      const climaValidos = [data.clima?.origem, data.clima?.destino].filter(c => c?.descricao);
+      if (climaValidos.length) {
+        html += '<div class="clima-row">';
+        for (const c of climaValidos) {
+          const icon = climaIcon[c.icone] || 'ti-sun';
+          html += `<div class="clima-card ${c.nivel || 'ok'}">
         <i class="ti ${icon} clima-icon"></i>
         <div><div class="clima-local">${c.label?.split(',')[0]}</div>
         <div class="clima-desc">${c.descricao}</div>
         <div class="clima-temp">${c.temperatura}°C · ${c.umidade}% umidade</div></div>
       </div>`;
-    }
-    html += '</div>';
-  }
+        }
+        html += '</div>';
+      }
 
-  // ── Cabeçalho ──────────────────────────────────────────────────────────────
-  html += `<div class="context-bar">
+      // ── Cabeçalho ──────────────────────────────────────────────────────────────
+      html += `<div class="context-bar">
     <div class="context-route">
-      <i class="ti ti-current-location"></i><b>${data.origem||''}</b>
-      <i class="ti ti-arrow-right"></i><b>${data.destino||''}</b>
+      <i class="ti ti-current-location"></i><b>${data.origem || ''}</b>
+      <i class="ti ti-arrow-right"></i><b>${data.destino || ''}</b>
     </div>
-    <span style="font-size:12px;color:var(--muted)">${data.resumo||''}</span>
+    <span style="font-size:12px;color:var(--muted)">${data.resumo || ''}</span>
   </div>`;
 
-  // ── Resumo ─────────────────────────────────────────────────────────────────
-  html += `<div class="summary-grid">
+      // ── Resumo ─────────────────────────────────────────────────────────────────
+      html += `<div class="summary-grid">
     <div class="summary-card"><div class="summary-label">Custo mínimo</div><div class="summary-val">R$ ${minCost.toFixed(2)}</div></div>
     <div class="summary-card"><div class="summary-label">Menor tempo</div><div class="summary-val">${fmtTime(minTime)}</div></div>
     <div class="summary-card"><div class="summary-label">Recomendada</div><div class="summary-val sm">${best.nome}</div></div>
   </div>`;
 
-  // ── Exportar ───────────────────────────────────────────────────────────────
-  if (data.exportar) {
-    html += `<div class="export-row">
+      // ── Exportar ───────────────────────────────────────────────────────────────
+      if (data.exportar) {
+        html += `<div class="export-row">
       <a class="export-btn btn-gmaps" href="${data.exportar.googleMaps}" target="_blank" rel="noopener"><i class="ti ti-map"></i> Google Maps</a>
       <a class="export-btn btn-waze" href="${data.exportar.waze}" target="_blank" rel="noopener"><i class="ti ti-navigation"></i> Waze</a>
     </div>`;
-  }
+      }
 
-  // ── Mapa ───────────────────────────────────────────────────────────────────
-  html += `<div class="map-section">
+      // ── Mapa ───────────────────────────────────────────────────────────────────
+      html += `<div class="map-section">
     <div class="section-label"><i class="ti ti-map"></i> Traçado real das rotas</div>
     <div class="map-container"><div id="routeMap"></div></div>
     <div class="map-legend">
-      ${data.rotas.map((r,i) => `<div class="legend-item"><div class="legend-dot" style="background:${ROUTE_COLORS[i%3]}"></div>${r.nome}</div>`).join('')}
+      ${data.rotas.map((r, i) => `<div class="legend-item"><div class="legend-dot" style="background:${ROUTE_COLORS[i % 3]}"></div>${r.nome}</div>`).join('')}
     </div>
   </div>`;
 
-  // ── Gráfico ────────────────────────────────────────────────────────────────
-  html += `<div class="chart-section">
+      // ── Gráfico ────────────────────────────────────────────────────────────────
+      html += `<div class="chart-section">
     <div class="section-label"><i class="ti ti-chart-bar"></i> Comparativo de rotas</div>
     <div class="chart-card">
       <div class="chart-tabs">
@@ -630,37 +1754,37 @@ function renderResults(data) {
     </div>
   </div>`;
 
-  // ── Cards de rotas ─────────────────────────────────────────────────────────
-  html += `<div class="section-label"><i class="ti ti-list-details"></i>${data.rotas.length} rotas analisadas</div>`;
-  data.rotas.forEach((r, i) => {
-    const isBest  = r.melhor === true;
-    const stripes = ['best','mid','c2'];
-    const stripe  = stripes[i] || '';
-    const tl      = r.nivel_transito || 'moderado';
-    const total   = +(r.custo_combustivel_reais||0) + +(r.pedagio_reais||0);
-    const isCheap = total === minCost;
-    const dtag    = r.destaque && r.destaque !== 'null'
-      ? `<span class="tag ${dtagClass[r.destaque]||'tag-muted'}">${r.destaque}</span>` : '';
+      // ── Cards de rotas ─────────────────────────────────────────────────────────
+      html += `<div class="section-label"><i class="ti ti-list-details"></i>${data.rotas.length} rotas analisadas</div>`;
+      data.rotas.forEach((r, i) => {
+        const isBest = r.melhor === true;
+        const stripes = ['best', 'mid', 'c2'];
+        const stripe = stripes[i] || '';
+        const tl = r.nivel_transito || 'moderado';
+        const total = +(r.custo_combustivel_reais || 0) + +(r.pedagio_reais || 0);
+        const isCheap = total === minCost;
+        const dtag = r.destaque && r.destaque !== 'null'
+          ? `<span class="tag ${dtagClass[r.destaque] || 'tag-muted'}">${r.destaque}</span>` : '';
 
-    html += `<div class="route-card${isBest?' best':''}">
+        html += `<div class="route-card${isBest ? ' best' : ''}">
       <div class="card-layout">
-        <div class="card-stripe ${stripe}" style="background:${ROUTE_COLORS[i%3]}"></div>
+        <div class="card-stripe ${stripe}" style="background:${ROUTE_COLORS[i % 3]}"></div>
         <div class="card-content">
           <div class="card-top">
             <div class="card-name"><h3>${r.nome}</h3>${dtag}</div>
-            ${isBest?`<span class="tag tag-best"><i class="ti ti-star"></i> Recomendada</span>`:''}
+            ${isBest ? `<span class="tag tag-best"><i class="ti ti-star"></i> Recomendada</span>` : ''}
           </div>
           <div class="card-via">Via <span>${r.via}</span></div>
           <div class="metrics">
             <div class="metric"><div class="metric-label"><i class="ti ti-ruler"></i> Distância</div><div class="metric-val">${r.distancia_km}<span class="metric-unit"> km</span></div></div>
             <div class="metric"><div class="metric-label"><i class="ti ti-clock"></i> Tempo</div><div class="metric-val">${fmtTime(r.tempo_min)}</div></div>
-            <div class="metric${isCheap?' hl':''}"><div class="metric-label"><i class="ti ti-droplet"></i> Combustível</div><div class="metric-val">R$&nbsp;${(+r.custo_combustivel_reais).toFixed(2)}</div></div>
+            <div class="metric${isCheap ? ' hl' : ''}"><div class="metric-label"><i class="ti ti-droplet"></i> Combustível</div><div class="metric-val">R$&nbsp;${(+r.custo_combustivel_reais).toFixed(2)}</div></div>
             <div class="metric"><div class="metric-label"><i class="ti ti-barrier-block"></i> Pedágio</div><div class="metric-val">R$&nbsp;${(+r.pedagio_reais).toFixed(2)}</div></div>
           </div>
           <div class="traffic-section">
             <span class="traffic-title">Trânsito</span>
             <div class="traffic-bar"><div class="traffic-fill ${tfill[tl]}" style="width:${twidth[tl]}"></div></div>
-            ${tstatus[tl]||''}
+            ${tstatus[tl] || ''}
           </div>
           <div class="card-analysis">${r.analise}</div>
           <div class="data-sources">
@@ -670,17 +1794,18 @@ function renderResults(data) {
         </div>
       </div>
     </div>`;
-  });
+      });
 
-  html += '</div>';
-  document.getElementById('results').innerHTML = html;
+      html += '</div>';
+      document.getElementById('results').innerHTML = html;
 
-  // Inicializa mapa e gráfico após DOM inserido
-  setTimeout(() => {
-    if (data.coordOrigem && data.coordDestino) initMap(data.coordOrigem, data.coordDestino, data.rotas);
-    renderChart(data.rotas);
-  }, 50);
-}
-</script>
+      // Inicializa mapa e gráfico após DOM inserido
+      setTimeout(() => {
+        if (data.coordOrigem && data.coordDestino) initMap(data.coordOrigem, data.coordDestino, data.rotas);
+        renderChart(data.rotas);
+      }, 50);
+    }
+  </script>
 </body>
+
 </html>

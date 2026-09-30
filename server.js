@@ -1,7 +1,7 @@
 import dotenv from "dotenv";
 dotenv.config();
 
-import express from "express";
+import express, { response } from "express";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
 
@@ -235,17 +235,31 @@ Horário: ${departure} | Prioridade: ${pLabels[priority] || priority}
 IMPORTANTE: retorne SOMENTE o objeto JSON abaixo, sem nenhum texto antes ou depois, sem explicações, sem markdown:
 {"resumo":"string","rotas":[{"nome":"string","pedagio_reais":number,"nivel_transito":"baixo|moderado|intenso","melhor":boolean,"destaque":"Mais rápida|Mais econômica|Menos pedágio|null","analise":"2 frases"}]}`;
 
-    const groqRes  = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+    const groqRes = await fetch("https://api.groq.com/openai/v1/chat/completions", {
       method: "POST",
-      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${GROQ_API_KEY}` },
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${GROQ_API_KEY}`
+      },
       body: JSON.stringify({
-        model: "llama-3.3-70b-versatile",
-        messages: [{ role: "user", content: groqPrompt }],
-        temperature: 0.4, max_tokens: 1000,
-      }),
+        model: "openai/gpt-oss-20b",
+        messages: [
+          {
+            role: "user",
+            content: groqPrompt
+          }
+        ],
+        temperature: 0.2,
+        max_tokens: 1500,
+        response_format: {
+          type: "json_object"
+        }
+      })
     });
     const groqData = await groqRes.json();
-    if (!groqRes.ok) return res.status(500).json({ error: groqData.error?.message || "Erro Groq" });
+
+    console.log("RESPOSTA COMPLETA DA GROQ:");
+    console.log(JSON.stringify(groqData, null, 2));
 
     const groqText = groqData.choices?.[0]?.message?.content || "";
     const jsonMatch = groqText.match(/\{[\s\S]*\}/);
